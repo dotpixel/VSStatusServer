@@ -8,6 +8,7 @@ namespace StatusServer
     {
         public ushort Port;
         public string IconFile;
+        public int StartDelaySeconds;
         private IEnumerable<string> _enabledExtensions;
 
         public IEnumerable<string> EnabledExtensions
@@ -22,6 +23,7 @@ namespace StatusServer
             {
                 Port = 25565,
                 IconFile = "server-icon.png",
+                StartDelaySeconds = 10,
                 EnabledExtensions = new List<string> { "world" },
             }; }
         }

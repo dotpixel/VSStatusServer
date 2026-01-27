@@ -47,24 +47,50 @@ namespace StatusServer
 
             _statusServer = new StatusTcpServer(Mod.Logger, config.Port);
             _statusServer.GetStatusPayload = () => {
-                var players = api.World.AllOnlinePlayers
-                    .Select(player => new PlayerPayload(player.PlayerName, player.PlayerUID))
-                    .ToArray();
-        
-                payload.Players.Online = players.Length;
-                payload.Players.Sample = players;
+                var onlinePlayers = api.World?.AllOnlinePlayers;
+                if (onlinePlayers != null)
+                {
+                    var players = onlinePlayers
+                        .Select(player => new PlayerPayload(player.PlayerName, player.PlayerUID))
+                        .ToArray();
+            
+                    payload.Players.Online = players.Length;
+                    payload.Players.Sample = players;
+                }
+                else
+                {
+                    payload.Players.Online = 0;
+                    payload.Players.Sample = Array.Empty<PlayerPayload>();
+                }
 
                 if (config.EnabledExtensions.Contains("world"))
                 {
+                    var calendar = api.World?.Calendar;
                     payload.World = new WorldPayload
                     {
-                        Datetime = api.World.Calendar.PrettyDate(),
+                        Datetime = calendar?.PrettyDate() ?? "",
                     };
                 }
                 
                 return payload;
             };
 
+            var delayMs = config.StartDelaySeconds * 1000;
+            if (delayMs > 0)
+            {
+                Mod.Logger.Notification(Lang.Get("Mod started. Listener will start in {0} seconds on port {1}", config.StartDelaySeconds, config.Port));
+                api.Event.RegisterCallback(_ => StartStatusServer(config.Port), delayMs);
+            }
+            else
+            {
+                Mod.Logger.Notification(Lang.Get("Mod started"));
+                StartStatusServer(config.Port);
+            }
+
+        }
+
+        private void StartStatusServer(ushort port)
+        {
             try {
                 _statusServer.Start();
             }
@@ -74,14 +100,13 @@ namespace StatusServer
                 return;
             }
 
-            Mod.Logger.Notification(Lang.Get("Status server started on port {0}", config.Port));
-
+            Mod.Logger.Notification(Lang.Get("Listening on port {0}", port));
         }
 
         public override void Dispose()
         {
-            _statusServer.Dispose();
-            Mod.Logger.Notification(Lang.Get("Status server stopped"));
+            _statusServer?.Dispose();
+            Mod.Logger.Notification(Lang.Get("Listener stopped"));
         }
 
         public override bool ShouldLoad(EnumAppSide side)
