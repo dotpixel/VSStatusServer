@@ -5,7 +5,6 @@
         <LangVersion>6</LangVersion>
         <RootNamespace>StatusServer</RootNamespace>
         <Version>1.0.3</Version>
-        <NoWarn>$(NoWarn);MSB3277</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
